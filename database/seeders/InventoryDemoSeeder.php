@@ -113,9 +113,17 @@ class InventoryDemoSeeder extends Seeder
         $itemIds = DB::table('items')->pluck('id')->toArray();
 
         // === TRANSAKSI MASUK & KELUAR ===
+        $groupCodes = [
+            'USP100525', // Umrah Super Sale 10 Okt 2025
+            'UPH101125', // Umrah Plus Hainan 10 Nov 2025
+            'UCTD110225', // Umrah City Tour Dubai 11 Feb 2025
+            'UKB271025',  // Umrah Kemilau Berkah 27 Okt 2025
+        ];
+
         foreach (range(1, 20) as $n) {
             $itemId = $itemIds[array_rand($itemIds)];
             $tgl = Carbon::now()->subDays(rand(0, 14));
+            $kodeGrup = $groupCodes[array_rand($groupCodes)];
 
             DB::table('in_transactions')->insert([
                 'item_id' => $itemId,
@@ -130,7 +138,7 @@ class InventoryDemoSeeder extends Seeder
 
             DB::table('out_transactions')->insert([
                 'item_id' => $itemId,
-                'kode_grup' => 'GRP-' . rand(100, 999),
+                'kode_grup' => $kodeGrup,
                 'qty' => rand(1, 10),
                 'receiver' => 'Jamaah ' . rand(1, 30),
                 'note' => 'Distribusi perlengkapan #' . $n,

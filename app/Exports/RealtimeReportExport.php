@@ -51,7 +51,7 @@ class RealtimeReportExport implements FromView, WithTitle, WithEvents, WithStyle
                 $sheet = $event->sheet->getDelegate();
 
                 // Tambah kop surat
-                $sheet->insertNewRowBefore(1, 8);
+                $sheet->insertNewRowBefore(1, 4);
 
                 $drawing = new Drawing();
                 $drawing->setName('Logo');
@@ -82,45 +82,52 @@ class RealtimeReportExport implements FromView, WithTitle, WithEvents, WithStyle
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
 
-                $sheet->getRowDimension(8)->setRowHeight(8);
+                // === Styling tabel setelah kop (deteksi baris header otomatis)
+                $highestRow = $sheet->getHighestRow();
+
+                $startRow = 5; // default jika tidak ketemu
+                for ($row = 1; $row <= $highestRow; $row++) {
+                    $cellValue = trim((string) $sheet->getCell('A' . $row)->getValue());
+                    if (strcasecmp($cellValue, 'No') === 0) {
+                        $startRow = $row;
+                        break;
+                    }
+                }
+                $lastRow = max($startRow, $highestRow);
+
+                // Header tebal + fill hijau lembut
+                $sheet->getStyle('A' . $startRow . ':I' . $startRow)->getFont()->setBold(true);
+                $sheet->getStyle('A' . $startRow . ':I' . $startRow)->getFill()
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('E8F5E9');
+
+                // Border seluruh tabel termasuk header
+                $sheet->getStyle('A' . $startRow . ':I' . $lastRow)
+                    ->applyFromArray([
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color' => ['argb' => '000000'],
+                            ],
+                        ],
+                    ]);
+
+                // Lebar otomatis kolom
+                foreach (range('A', 'I') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+
+                // Perataan kolom angka / kode
+                $sheet->getStyle('A' . $startRow . ':A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('C' . $startRow . ':C' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('G' . $startRow . ':G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             },
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        $lastRow = $this->transactions->count() + 10;
-
-        // Header tabel hijau lembut
-        $sheet->getStyle('A9:I9')->applyFromArray([
-            'font' => ['bold' => true],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical'   => Alignment::VERTICAL_CENTER,
-            ],
-            'fill' => [
-                'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'E8F5E9'],
-            ],
-        ]);
-
-        // Border seluruh tabel
-        $sheet->getStyle('A9:I' . $lastRow)->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => '000000'],
-                ],
-            ],
-        ]);
-
-        foreach (range('A', 'I') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $sheet->getStyle('A10:C' . $lastRow)
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
+        // Styling utama sudah diterapkan pada AfterSheet (setelah kop tersisip)
         return [];
     }
 }

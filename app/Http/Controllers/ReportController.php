@@ -52,7 +52,8 @@ class ReportController extends Controller
             $m->type = 'out';
             return $m;
         });
-        $transactions = $in->merge($out);
+        // gunakan concat agar data masuk & keluar tidak saling menimpa
+        $transactions = $in->values()->concat($out->values());
 
         if ($request->filled('start_date')) {
             $transactions = $transactions->filter(fn($t) => $t->date >= $request->start_date);
@@ -165,7 +166,14 @@ class ReportController extends Controller
 
     public function exportCategoryPDF()
     {
-        $data = Item::with('category')->orderBy('category_id')->get();
+        // Urutkan sesuai tampilan UI: Kategori (A-Z), lalu Nama Barang (A-Z)
+        $data = Item::query()
+            ->select('items.*')
+            ->with('category')
+            ->leftJoin('categories', 'categories.id', '=', 'items.category_id')
+            ->orderBy('categories.name')
+            ->orderBy('items.name')
+            ->get();
         $pdf = Pdf::loadView('reports.category-pdf', [
             'items'        => $data,
             'generated_at' => now()->format('d/m/Y H:i'),
@@ -224,7 +232,8 @@ class ReportController extends Controller
     {
         $in  = InTransaction::with('item.category')->get()->map(fn($m) => tap($m, fn($t) => $t->type = 'in'));
         $out = OutTransaction::with('item.category')->get()->map(fn($m) => tap($m, fn($t) => $t->type = 'out'));
-        $transactions = $in->merge($out);
+        // concat mencegah overwrite karena key numerik
+        $transactions = $in->values()->concat($out->values());
 
         if ($request->filled('start_date')) $transactions = $transactions->filter(fn($t) => $t->date >= $request->start_date);
         if ($request->filled('end_date'))   $transactions = $transactions->filter(fn($t) => $t->date <= $request->end_date);

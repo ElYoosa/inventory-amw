@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use App\Exports\RealtimeReportExport;
+use App\Exports\RealtimeCollectionExport;
 
 class RealtimeExcelExport implements WithMultipleSheets
 {
@@ -19,7 +19,7 @@ class RealtimeExcelExport implements WithMultipleSheets
     public function sheets(): array
     {
         return [
-            new RealtimeReportExport($this->transactions, $this->meta),
+            new RealtimeCollectionExport($this->transactions, $this->meta),
         ];
     }
 }

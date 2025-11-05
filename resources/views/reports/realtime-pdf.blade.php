@@ -93,9 +93,9 @@
             @forelse ($transactions as $i => $t)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ optional($t->date)->format('d M Y') ?? '-' }}</td>
+                    <td>{{ $t->date ? \Carbon\Carbon::parse($t->date)->format('d M Y') : '-' }}</td>
                     <td>{{ $t->type === 'in' ? 'Masuk' : 'Keluar' }}</td>
-                    <td>{{ $t->item->code ?? '-' }}</td>
+                    <td>{{ optional($t->item)->id ?? '-' }}</td>
                     <td>{{ $t->item->name ?? '-' }}</td>
                     <td>{{ $t->item->category->name ?? '-' }}</td>
                     <td>{{ $t->qty }}</td>

@@ -2,10 +2,12 @@
     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
         <strong>Distribusi Barang per Keberangkatan</strong>
         <div>
-            <a href="{{ route('reports.distribusi.pdf', request()->query()) }}" class="btn btn-light btn-sm me-2">
+            <a href="{{ route('reports.distribusi.pdf') }}" data-export-distribusi
+                data-base="{{ route('reports.distribusi.pdf') }}" class="btn btn-light btn-sm me-2">
                 <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
             </a>
-            <a href="{{ route('reports.distribusi.excel', request()->query()) }}" class="btn btn-light btn-sm">
+            <a href="{{ route('reports.distribusi.excel') }}" data-export-distribusi
+                data-base="{{ route('reports.distribusi.excel') }}" class="btn btn-light btn-sm">
                 <i class="bi bi-file-earmark-excel text-success"></i> Excel
             </a>
         </div>
@@ -16,14 +18,14 @@
         <form id="distribusiFilterForm" class="row g-3 align-items-end mb-3">
             <div class="col-md-3">
                 <label class="form-label">Tanggal</label>
-                <input type="date" name="date" class="form-control">
+                <input type="date" name="date" value="{{ request('date') }}" class="form-control">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Kode Grup</label>
                 <select name="kode_grup" class="form-select">
                     <option value="">Semua Grup</option>
                     @foreach ($kodeGrupList as $g)
-                        <option value="{{ $g }}">{{ $g }}</option>
+                        <option value="{{ $g }}" @selected(request('kode_grup') == $g)>{{ $g }}</option>
                     @endforeach
                 </select>
             </div>
@@ -158,6 +160,21 @@
             $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
                 const target = $(e.target).attr("href");
                 if (target === "#distribusi") initDistribusiTable();
+            });
+
+            // ✅ Sinkronkan filter saat unduh
+            document.querySelectorAll('[data-export-distribusi]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const form = document.getElementById('distribusiFilterForm');
+                    const params = new URLSearchParams(new FormData(form));
+                    // buang parameter kosong supaya URL bersih
+                    [...params.keys()].forEach(key => {
+                        if (!params.get(key)) params.delete(key);
+                    });
+                    const queryString = params.toString();
+                    this.href = queryString ? `${this.dataset.base}?${queryString}` : this.dataset
+                        .base;
+                });
             });
         });
     </script>

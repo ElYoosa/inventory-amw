@@ -53,34 +53,7 @@ class OutTransactionExport implements FromCollection, WithHeadings, WithStyles, 
 
     public function styles(Worksheet $sheet)
     {
-        // Header tebal dan hijau lembut
-        $sheet->getStyle('A9:H9')->getFont()->setBold(true);
-        $sheet->getStyle('A9:H9')->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('E8F5E9');
-
-        $lastRow = $sheet->getHighestRow();
-
-        // Border hitam
-        $sheet->getStyle('A9:H' . $lastRow)
-            ->applyFromArray([
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => '000000'],
-                    ],
-                ],
-            ]);
-
-        // Lebar otomatis
-        foreach (range('A', 'H') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        // Rata tengah kolom tertentu
-        $sheet->getStyle('A10:A' . $lastRow)->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('B10:B' . $lastRow)->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('F10:F' . $lastRow)->getAlignment()->setHorizontal('center');
+        // Styling dilakukan pada AfterSheet agar mengikuti penambahan kop surat
     }
 
     public function registerEvents(): array
@@ -89,8 +62,8 @@ class OutTransactionExport implements FromCollection, WithHeadings, WithStyles, 
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // Sisipkan baris tambahan untuk kop surat
-                $sheet->insertNewRowBefore(1, 8);
+                // Sisipkan 4 baris untuk kop surat (baris 1-4)
+                $sheet->insertNewRowBefore(1, 4);
 
                 // Tambah logo
                 $drawing = new Drawing();
@@ -124,8 +97,44 @@ class OutTransactionExport implements FromCollection, WithHeadings, WithStyles, 
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
 
-                // Baris header tabel mulai di row 9 (fix posisi header hijau)
-                $sheet->getRowDimension(8)->setRowHeight(8);
+                // === Styling tabel (deteksi baris header otomatis)
+                $highestRow = $sheet->getHighestRow();
+                $headerRow = 5; // default
+                for ($row = 1; $row <= $highestRow; $row++) {
+                    $cell = trim((string) $sheet->getCell('A' . $row)->getValue());
+                    if (strcasecmp($cell, 'No') === 0) {
+                        $headerRow = $row;
+                        break;
+                    }
+                }
+                $lastRow = max($headerRow, $highestRow);
+
+                // Header tebal + fill hijau lembut
+                $sheet->getStyle('A' . $headerRow . ':H' . $headerRow)->getFont()->setBold(true);
+                $sheet->getStyle('A' . $headerRow . ':H' . $headerRow)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('E8F5E9');
+
+                // Border seluruh tabel termasuk header
+                $sheet->getStyle('A' . $headerRow . ':H' . $lastRow)
+                    ->applyFromArray([
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color' => ['argb' => '000000'],
+                            ],
+                        ],
+                    ]);
+
+                // Lebar otomatis
+                foreach (range('A', 'H') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+
+                // Rata tengah kolom tertentu
+                $sheet->getStyle('A' . $headerRow . ':A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('B' . $headerRow . ':B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('F' . $headerRow . ':F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             },
         ];
     }

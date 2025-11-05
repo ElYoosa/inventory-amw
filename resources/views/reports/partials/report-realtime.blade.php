@@ -2,10 +2,12 @@
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h6 class="mb-0"><i class="bi bi-clock-history"></i> Laporan Transaksi Real-Time</h6>
         <div>
-            <a href="{{ route('reports.realtime.pdf', request()->query()) }}" class="btn btn-light btn-sm me-2">
+            <a href="{{ route('reports.realtime.pdf') }}" data-export-realtime
+                data-base="{{ route('reports.realtime.pdf') }}" class="btn btn-light btn-sm me-2">
                 <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
             </a>
-            <a href="{{ route('reports.realtime.excel', request()->query()) }}" class="btn btn-light btn-sm">
+            <a href="{{ route('reports.realtime.excel') }}" data-export-realtime
+                data-base="{{ route('reports.realtime.excel') }}" class="btn btn-light btn-sm">
                 <i class="bi bi-file-earmark-excel text-success"></i> Excel
             </a>
         </div>
@@ -16,18 +18,18 @@
         <form id="realtimeFilterForm" class="row g-3 mb-3">
             <div class="col-md-3">
                 <label class="form-label">Dari Tanggal</label>
-                <input type="date" name="start_date" class="form-control">
+                <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Sampai</label>
-                <input type="date" name="end_date" class="form-control">
+                <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Jenis</label>
                 <select name="type" class="form-select">
                     <option value="">Semua</option>
-                    <option value="in">Masuk</option>
-                    <option value="out">Keluar</option>
+                    <option value="in" @selected(request('type') === 'in')>Masuk</option>
+                    <option value="out" @selected(request('type') === 'out')>Keluar</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -35,7 +37,7 @@
                 <select name="category_id" class="form-select">
                     <option value="">Semua</option>
                     @foreach ($categories as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
+                        <option value="{{ $id }}" @selected(request('category_id') == $id)>{{ $name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -150,6 +152,20 @@
 
             // ⏱️ Auto-refresh 30 detik tanpa flicker
             setInterval(() => table.ajax.reload(null, false), 30000);
+
+            // 🔗 Sesuaikan URL export dengan filter aktif
+            document.querySelectorAll('[data-export-realtime]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const form = document.getElementById('realtimeFilterForm');
+                    const params = new URLSearchParams(new FormData(form));
+                    [...params.keys()].forEach(key => {
+                        if (!params.get(key)) params.delete(key);
+                    });
+                    const queryString = params.toString();
+                    this.href = queryString ? `${this.dataset.base}?${queryString}` : this.dataset
+                        .base;
+                });
+            });
         });
     </script>
 @endpush

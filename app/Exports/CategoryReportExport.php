@@ -18,8 +18,13 @@ class CategoryReportExport implements FromCollection, WithHeadings, WithStyles, 
 {
     public function collection()
     {
-        $data = Item::with('category')
-            ->orderBy('category_id')
+        // Urutkan sesuai tampilan UI: Kategori (A-Z), lalu Nama Barang (A-Z)
+        $data = Item::query()
+            ->select('items.*')
+            ->with('category')
+            ->leftJoin('categories', 'categories.id', '=', 'items.category_id')
+            ->orderBy('categories.name')
+            ->orderBy('items.name')
             ->get()
             ->map(function ($item, $index) {
                 return [
@@ -51,34 +56,7 @@ class CategoryReportExport implements FromCollection, WithHeadings, WithStyles, 
 
     public function styles(Worksheet $sheet)
     {
-        // Header tabel (baris 9)
-        $sheet->getStyle('A9:G9')->getFont()->setBold(true);
-        $sheet->getStyle('A9:G9')->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('E8F5E9');
-
-        $lastRow = $sheet->getHighestRow();
-
-        // Border hitam di seluruh tabel
-        $sheet->getStyle('A9:G' . $lastRow)
-            ->applyFromArray([
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => '000000'],
-                    ],
-                ],
-            ]);
-
-        // Auto width
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        // Rata tengah kolom angka
-        $sheet->getStyle('A9:A' . $lastRow)->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('E9:F' . $lastRow)->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('G9:G' . $lastRow)->getAlignment()->setHorizontal('center');
+        // Penataan utama dipindahkan ke AfterSheet agar posisi tepat
     }
 
     public function registerEvents(): array
@@ -87,8 +65,8 @@ class CategoryReportExport implements FromCollection, WithHeadings, WithStyles, 
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // Sisipkan 8 baris untuk kop surat
-                $sheet->insertNewRowBefore(1, 8);
+                // Sisipkan 4 baris untuk kop surat (baris 1-4)
+                $sheet->insertNewRowBefore(1, 4);
 
                 // Tambah logo
                 $drawing = new Drawing();
@@ -121,6 +99,37 @@ class CategoryReportExport implements FromCollection, WithHeadings, WithStyles, 
                     'font' => ['size' => 11],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
+
+                // === Styling tabel setelah kop tersisip ===
+                $headerRow = 5;
+                $lastRow = $sheet->getHighestRow();
+
+                // Header dengan fill hijau muda dan bold
+                $sheet->getStyle('A' . $headerRow . ':G' . $headerRow)->getFont()->setBold(true);
+                $sheet->getStyle('A' . $headerRow . ':G' . $headerRow)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('E8F5E9');
+
+                // Border seluruh tabel dari judul hingga baris terakhir
+                $sheet->getStyle('A' . $headerRow . ':G' . $lastRow)
+                    ->applyFromArray([
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color' => ['argb' => '000000'],
+                            ],
+                        ],
+                    ]);
+
+                // Alignment angka dan kolom tertentu
+                $sheet->getStyle('A' . $headerRow . ':A' . $lastRow)->getAlignment()->setHorizontal('center');
+                $sheet->getStyle('E' . $headerRow . ':F' . $lastRow)->getAlignment()->setHorizontal('center');
+                $sheet->getStyle('G' . $headerRow . ':G' . $lastRow)->getAlignment()->setHorizontal('center');
+
+                // Auto width kolom
+                foreach (range('A', 'G') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
             },
         ];
     }
