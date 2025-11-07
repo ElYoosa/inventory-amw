@@ -1,8 +1,8 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
     <div id="dashboard-staff" class="opacity-0 translate-y-2 transition-all">
-        {{-- 🔹 Pesan Sambutan --}}
+        {{-- ðŸ”¹ Pesan Sambutan --}}
         @if (session('welcome_message'))
             @php $msg = session('welcome_message'); @endphp
             <div class="alert border-0 text-white shadow-sm animate-fade-in mb-4"
@@ -11,19 +11,19 @@
             </div>
         @endif
 
-        {{-- 🔹 Judul --}}
+        {{-- ðŸ”¹ Judul --}}
         <div class="mb-4">
-            <h3 class="fw-bold text-theme mb-1">👷 Dashboard Staff</h3>
+            <h3 class="fw-bold text-theme mb-1">ðŸ‘· Dashboard Staff</h3>
             <p class="text-muted mb-0">Pantau aktivitas transaksi dan status stok barang yang Anda kelola.</p>
         </div>
 
-        {{-- 🔹 Statistik Pribadi --}}
+        {{-- ðŸ”¹ Statistik Pribadi --}}
         <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="card shadow-theme border-0 text-white h-100"
                     style="background: linear-gradient(135deg, var(--theme-color), #EAB308);">
                     <div class="card-body text-center">
-                        <h6 class="fw-semibold">⬆️ Transaksi Masuk oleh Anda</h6>
+                        <h6 class="fw-semibold">â¬†ï¸ Transaksi Masuk oleh Anda</h6>
                         <h2 class="fw-bold mt-2">{{ $inCount }}</h2>
                     </div>
                 </div>
@@ -32,14 +32,14 @@
                 <div class="card shadow-theme border-0 text-white h-100"
                     style="background: linear-gradient(135deg, var(--theme-color), #F59E0B);">
                     <div class="card-body text-center">
-                        <h6 class="fw-semibold">⬇️ Transaksi Keluar oleh Anda</h6>
+                        <h6 class="fw-semibold">â¬‡ï¸ Transaksi Keluar oleh Anda</h6>
                         <h2 class="fw-bold mt-2">{{ $outCount }}</h2>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- 🔹 Grafik Donat --}}
+        {{-- ðŸ”¹ Grafik Donat --}}
         <div class="card border-0 shadow-sm mb-5">
             <div class="card-header text-white fw-semibold" style="background: var(--theme-color);">
                 <i class="bi bi-pie-chart-fill me-2"></i> Proporsi Transaksi Anda
@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        {{-- 🔹 Progress Bar Stok Barang --}}
+        {{-- ðŸ”¹ Progress Bar Stok Barang --}}
         <div class="card border-0 shadow-sm mb-5">
             <div class="card-header text-white fw-semibold" style="background: var(--theme-color);">
                 <i class="bi bi-box-seam me-2"></i> Top 5 Barang dengan Stok Menipis
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        {{-- 🔹 Notifikasi --}}
+        {{-- ðŸ”¹ Notifikasi --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header text-white fw-semibold" style="background: var(--theme-color);">
                 <i class="bi bi-bell-fill me-2"></i> Notifikasi Terbaru
@@ -98,7 +98,7 @@
         </div>
     </div>
 
-    {{-- 🔸 Chart.js --}}
+    {{-- ðŸ”¸ Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -149,16 +149,12 @@
                 }
             });
 
-            // 🔔 Toast Notification
-            const toastEl = document.getElementById('successToast');
-            if (toastEl) {
-                const toast = new bootstrap.Toast(toastEl);
-                setTimeout(() => toast.show(), 500);
-            }
+            // ðŸ”” Toast Notification
+            // (toast legacy dihapus)
         });
 
-        // 🔔 Aktifkan toast otomatis jika session successToast ada
-        @if (session('successToast'))
+        // ðŸ”” Aktifkan toast otomatis jika session successToast ada
+        @if (false)
             const toastEl = document.getElementById('successToast');
             if (toastEl) {
                 const toast = new bootstrap.Toast(toastEl);
@@ -167,14 +163,14 @@
         @endif
     </script>
 
-    {{-- 🔔 Toast Notification Template --}}
-    @if (session('successToast'))
+    {{-- ðŸ”” Toast Notification Template --}}
+    @if (false)
         <div class="toast-container position-fixed bottom-0 end-0 p-3">
             <div id="successToast" class="toast text-bg-success border-0 shadow-lg" role="alert" aria-live="assertive"
                 aria-atomic="true" data-bs-delay="4000">
                 <div class="d-flex">
                     <div class="toast-body">
-                        ✅ {{ session('successToast') }}
+                        âœ… {{ session('successToast') }}
                     </div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
                         aria-label="Close"></button>
@@ -183,7 +179,7 @@
         </div>
     @endif
 
-    {{-- 🔹 Efek Animasi --}}
+    {{-- ðŸ”¹ Efek Animasi --}}
     <style>
         @keyframes fadeIn {
             from {
@@ -231,10 +227,10 @@
                         {{ $tx['item_name'] ?? '-' }}
                         <small class="text-muted">x{{ $tx['qty'] ?? 0 }}</small>
                         @if (!$isIn && !empty($tx['receiver']))
-                            <small class="text-muted">• Penerima: {{ $tx['receiver'] }}</small>
+                            <small class="text-muted">â€¢ Penerima: {{ $tx['receiver'] }}</small>
                         @endif
                         @if (!empty($tx['kode_grup']))
-                            <small class="text-muted">• Grup: {{ $tx['kode_grup'] }}</small>
+                            <small class="text-muted">â€¢ Grup: {{ $tx['kode_grup'] }}</small>
                         @endif
                     </div>
                     <small class="text-muted">{{ $d->format('d M Y') }}</small>

@@ -37,7 +37,7 @@ class TransactionObserver
 
         $payload = [
           "item_id" => $item->id,
-          "notified_at" => now()->toDateString(),
+          "notified_at" => now(),
           "message" => "Stok {$item->name} HABIS (0 / batas {$item->min_stock})",
           "status" => "new",
           "role_target" => "manager",
@@ -61,7 +61,7 @@ class TransactionObserver
         if (!$exists) {
           Notification::create([
             "item_id" => $item->id,
-            "notified_at" => now()->toDateString(),
+            "notified_at" => now(),
             "message" => "Stok {$item->name} menipis ({$item->stock} / batas {$item->min_stock})",
             "status" => "new",
             "role_target" => "manager",
@@ -76,7 +76,38 @@ class TransactionObserver
           ->where("status", "new")
           ->update(["status" => "read"]);
       }
+
+      // 4) Notifikasi transaksi (anti-spam via ambang qty)
+      try {
+        $thIn = (int) config('notifications.transaction_thresholds.in', 10);
+        $thOut = (int) config('notifications.transaction_thresholds.out', 10);
+
+        if ($trx instanceof InTransaction && (int) $trx->qty >= $thIn) {
+          Notification::create([
+            'item_id' => $item->id,
+            'notified_at' => now(),
+            'message' => "Transaksi masuk {$trx->qty} " . ($item->unit ?? '') . " untuk {$item->name}",
+            'status' => 'new',
+            'role_target' => 'manager',
+            'title' => 'Transaksi Masuk',
+          ]);
+        }
+
+        if ($trx instanceof OutTransaction && (int) $trx->qty >= $thOut) {
+          $to = trim((string) ($trx->receiver ?? ''));
+          $extra = $to !== '' ? " ke {$to}" : '';
+          Notification::create([
+            'item_id' => $item->id,
+            'notified_at' => now(),
+            'message' => "Transaksi keluar {$trx->qty} " . ($item->unit ?? '') . " untuk {$item->name}{$extra}",
+            'status' => 'new',
+            'role_target' => 'manager',
+            'title' => 'Transaksi Keluar',
+          ]);
+        }
+      } catch (\Throwable $e) {
+        // Abaikan kesalahan pembuatan notifikasi agar transaksi utama tetap sukses
+      }
     });
   }
 }
-

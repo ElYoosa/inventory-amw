@@ -12,6 +12,7 @@
 
     {{-- ✅ DataTables CSS --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <script src="https://unpkg.com/lucide-icons@latest"></script>
 
@@ -341,8 +342,114 @@
         });
     </script>
 
+    {{-- Global Toasts (success/error/info) --}}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1060">
+        @if (session('successToast'))
+            <div class="toast align-items-center text-bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
+                <div class="d-flex">
+                    <div class="toast-body">✅ {{ session('successToast') }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        @endif
+        @if (session('errorToast'))
+            <div class="toast align-items-center text-bg-danger border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000" data-bs-autohide="true">
+                <div class="d-flex">
+                    <div class="toast-body">❌ {{ session('errorToast') }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        @endif
+        @if (session('infoToast'))
+            <div class="toast align-items-center text-bg-info border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000" data-bs-autohide="true">
+                <div class="d-flex">
+                    <div class="toast-body">ℹ️ {{ session('infoToast') }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    <script>
+        // Helper global untuk menampilkan toast dinamis (AJAX, dll)
+        window.showToast = function(type = 'info', message = '') {
+            const container = document.querySelector('.toast-container');
+            if (!container) return;
+            const color = type === 'success' ? 'success' : (type === 'error' ? 'danger' : 'info');
+            const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+            const el = document.createElement('div');
+            el.className = `toast align-items-center text-bg-${color} border-0 shadow`;
+            el.setAttribute('role', 'alert');
+            el.setAttribute('aria-live', 'assertive');
+            el.setAttribute('aria-atomic', 'true');
+            el.setAttribute('data-bs-delay', '4500');
+            el.setAttribute('data-bs-autohide', 'true');
+            el.innerHTML = `<div class="d-flex"><div class="toast-body">${icon} ${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+            container.appendChild(el);
+            const toast = new bootstrap.Toast(el);
+            toast.show();
+            el.addEventListener('hidden.bs.toast', () => el.remove());
+        };
+
+        // Tampilkan semua toast dari session jika ada
+        document.querySelectorAll('.toast-container .toast').forEach(el => {
+            const toast = new bootstrap.Toast(el);
+            toast.show();
+            el.addEventListener('hidden.bs.toast', () => el.remove());
+        });
+    </script>
+
     {{-- ✅ Script tambahan halaman --}}
     @stack('scripts')
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const legacyToast = document.getElementById('successToast');
+        if (legacyToast) {
+          legacyToast.remove();
+        }
+        // Ensure Bootstrap Icons is available
+        if (!document.querySelector('link[href*="bootstrap-icons"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css';
+          document.head.appendChild(link);
+        }
+
+        // Override showToast to use Bootstrap Icons consistently
+        window.showToast = function(type = 'info', message = '') {
+          const container = document.querySelector('.toast-container');
+          if (!container) return;
+          const color = type === 'success' ? 'success' : (type === 'error' ? 'danger' : 'info');
+          const icon = type === 'success' ? 'check-circle-fill' : (type === 'error' ? 'x-circle-fill' : 'info-circle-fill');
+          const el = document.createElement('div');
+          el.className = `toast align-items-center text-bg-${color} border-0 shadow`;
+          el.setAttribute('role', 'alert');
+          el.setAttribute('aria-live', 'assertive');
+          el.setAttribute('aria-atomic', 'true');
+          el.setAttribute('data-bs-delay', '4500');
+          el.setAttribute('data-bs-autohide', 'true');
+          el.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="bi bi-${icon} me-1"></i> ${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+          container.appendChild(el);
+          const toast = new bootstrap.Toast(el);
+          toast.show();
+          el.addEventListener('hidden.bs.toast', () => el.remove());
+        };
+
+        // For any existing session toasts, prepend icons if missing
+        document.querySelectorAll('.toast-container .toast .toast-body').forEach(body => {
+          if (!body.querySelector('.bi')) {
+            let text = body.textContent?.trim() || '';
+            // Hapus emoji lama jika ada agar tidak dobel
+            text = text.replace(/^([✅❌ℹ️]\s*)/, '');
+            let icon = 'info-circle-fill';
+            const parent = body.closest('.toast');
+            if (parent?.classList.contains('text-bg-success')) icon = 'check-circle-fill';
+            else if (parent?.classList.contains('text-bg-danger')) icon = 'x-circle-fill';
+            body.innerHTML = `<i class="bi bi-${icon} me-1"></i> ${text}`;
+          }
+        });
+      });
+    </script>
 </body>
 
 </html>

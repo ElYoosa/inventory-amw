@@ -98,19 +98,26 @@
             <ul class="list-group list-group-flush">
                 @forelse ($notifications as $n)
                     @php
-                        $t = strtolower($n->title ?? '');
-                        $icon = 'bi-bell-fill';
-                        $color = 'text-theme';
-                        $badge = '';
-                        if (str_contains($t, 'habis')) { $icon = 'bi-exclamation-octagon-fill'; $color = 'text-danger'; $badge = 'Habis'; }
-                        elseif (str_contains($t, 'menipis')) { $icon = 'bi-exclamation-triangle-fill'; $color = 'text-warning'; $badge = 'Menipis'; }
+                        $icon = $n->icon;
+                        $level = $n->level; // danger, warning, info, secondary
+                        $label = $n->label; // Habis/Menipis/Transaksi Masuk/Keluar/Umum
+                        $color = match($level) {
+                            'danger' => 'text-danger',
+                            'warning' => 'text-warning',
+                            'info' => 'text-info',
+                            default => 'text-secondary'
+                        };
+                        $badgeClass = match($level) {
+                            'danger' => 'bg-danger-subtle text-danger',
+                            'warning' => 'bg-warning-subtle text-warning',
+                            'info' => 'bg-info-subtle text-info',
+                            default => 'bg-secondary-subtle text-secondary',
+                        };
                     @endphp
                     <li class="list-group-item d-flex align-items-center justify-content-between">
                         <div>
                             <i class="bi {{ $icon }} me-2 {{ $color }}"></i>
-                            @if ($badge)
-                                <span class="badge {{ $badge === 'Habis' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning' }} me-2">{{ $badge }}</span>
-                            @endif
+                            <span class="badge {{ $badgeClass }} me-2">{{ $label }}</span>
                             {{ $n->message }}
                         </div>
                         <small class="text-muted">{{ optional($n->notified_at)->format('d M Y H:i') ?? $n->created_at->format('d M Y H:i') }}</small>

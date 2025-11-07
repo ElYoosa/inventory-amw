@@ -33,7 +33,7 @@ class DashboardController extends Controller
           "outCount" => OutTransaction::count(),
           "activityCount" => ActivityLog::count(),
           "lowStocks" => Item::whereColumn("stock", "<=", "min_stock")->get(),
-          "notifications" => Notification::latest()->take(5)->get(),
+          "notifications" => Notification::recent()->take(5)->get(),
         ]);
 
       // 🟩 MANAGER → Monitoring stok
@@ -74,8 +74,8 @@ class DashboardController extends Controller
         return view("dashboard_manager", [
           "role" => "manager",
           "items" => $items,
-          // Hanya notifikasi baru yang ditujukan untuk manager
-          "notifications" => Notification::forManager()->new()->latest()->take(10)->get(),
+          // Hanya notifikasi baru yang ditujukan untuk manager, urut default (notified_at/created_at)
+          "notifications" => Notification::forManager()->new()->recent()->take(10)->get(),
           "chartCategories" => $chartCategories,
           "chartStocks" => $chartStocks,
           "groupLabels" => $groupLabels,

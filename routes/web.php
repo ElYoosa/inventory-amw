@@ -79,6 +79,23 @@ Route::middleware(["auth"])->group(function () {
       NotificationController::class,
       'count',
     ])->name('notifications.count');
+    // Partial list + delete actions
+    Route::get('/notifications/list', [
+      NotificationController::class,
+      'list',
+    ])->name('notifications.list');
+    Route::delete('/notifications/{notification}', [
+      NotificationController::class,
+      'destroy',
+    ])->name('notifications.destroy');
+    Route::delete('/notifications', [
+      NotificationController::class,
+      'destroyAll',
+    ])->name('notifications.destroyAll');
+    Route::delete('/notifications/read', [
+      NotificationController::class,
+      'destroyRead',
+    ])->name('notifications.destroyRead');
 
     /*
         |--------------------------------------------------------------------------
