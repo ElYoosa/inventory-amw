@@ -113,7 +113,7 @@
                             @endif
                             {{ $n->message }}
                         </div>
-                        <small class="text-muted">{{ optional($n->notified_at)->diffForHumans() ?? $n->created_at->diffForHumans() }}</small>
+                        <small class="text-muted">{{ optional($n->notified_at)->format('d M Y H:i') ?? $n->created_at->format('d M Y H:i') }}</small>
                     </li>
                 @empty
                     <li class="list-group-item text-muted text-center">Tidak ada notifikasi saat ini.</li>

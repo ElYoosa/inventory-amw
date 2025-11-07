@@ -45,7 +45,7 @@
                         @foreach ($notifications as $notif)
                             <tr class="{{ $notif->status === 'new' ? 'table-warning' : '' }}">
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ optional($notif->notified_at)->format('d M Y') ?? $notif->created_at->format('d M Y H:i') }}</td>
+                                <td>{{ optional($notif->notified_at)->format('d M Y H:i') ?? $notif->created_at->format('d M Y H:i') }}</td>
                                 <td>{{ $notif->item->name ?? '-' }}</td>
                                 <td>
                                     @php $t = strtolower($notif->title ?? ''); @endphp
