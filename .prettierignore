@@ -1,0 +1,17 @@
+# Laravel
+/vendor
+/node_modules
+/storage
+/bootstrap/cache
+/public/build
+/public/hot
+/.git
+/.idea
+
+# Lock files
+composer.lock
+package-lock.json
+npm-shrinkwrap.json
+
+# Others
+.env

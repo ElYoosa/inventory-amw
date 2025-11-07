@@ -11,58 +11,55 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /** Tampilkan form profil pengguna */
-    public function edit(Request $request): View
-    {
-        return view('profile.edit', [
-            'user' => Auth::user(),
-        ]);
+  /** Tampilkan form profil pengguna */
+  public function edit(Request $request): View
+  {
+    return view("profile.edit", [
+      "user" => Auth::user(),
+    ]);
+  }
+
+  /** Update informasi profil pengguna */
+  public function update(ProfileUpdateRequest $request): RedirectResponse
+  {
+    $user = Auth::user();
+    $validated = $request->validated();
+
+    // Jika tidak ada perubahan data
+    if ($validated["name"] === $user->name && $validated["email"] === $user->email) {
+      return Redirect::route("profile.edit")->with(
+        "infoToast",
+        "Tidak ada perubahan pada profil Anda.",
+      );
     }
 
-    /** Update informasi profil pengguna */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $user = Auth::user();
-        $validated = $request->validated();
+    // Proses update normal
+    $user->fill($validated);
 
-        // Jika tidak ada perubahan data
-        if (
-            $validated['name'] === $user->name &&
-            $validated['email'] === $user->email
-        ) {
-            return Redirect::route('profile.edit')
-                ->with('infoToast', 'Tidak ada perubahan pada profil Anda.');
-        }
-
-        // Proses update normal
-        $user->fill($validated);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
-
-        return Redirect::route('profile.edit')
-            ->with('successToast', 'Profil berhasil diperbarui!');
+    if ($user->isDirty("email")) {
+      $user->email_verified_at = null;
     }
 
-    /** Hapus akun pengguna */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
+    $user->save();
 
-        $user = Auth::user();
+    return Redirect::route("profile.edit")->with("successToast", "Profil berhasil diperbarui!");
+  }
 
-        Auth::logout();
-        $user->delete();
+  /** Hapus akun pengguna */
+  public function destroy(Request $request): RedirectResponse
+  {
+    $request->validateWithBag("userDeletion", [
+      "password" => ["required", "current_password"],
+    ]);
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    $user = Auth::user();
 
-        return Redirect::to('/')
-            ->with('infoToast', 'Akun Anda telah dihapus dari sistem.');
-    }
+    Auth::logout();
+    $user->delete();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return Redirect::to("/")->with("infoToast", "Akun Anda telah dihapus dari sistem.");
+  }
 }

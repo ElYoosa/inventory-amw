@@ -1,8 +1,7 @@
 <?php
 
 return [
-
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Application Name
     |--------------------------------------------------------------------------
@@ -13,14 +12,13 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
-    'aliases' => [
-        'Pdf' => Barryvdh\DomPDF\Facade\Pdf::class,
-        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
-    ],
+  "name" => env("APP_NAME", "Laravel"),
+  "aliases" => [
+    "Pdf" => Barryvdh\DomPDF\Facade\Pdf::class,
+    "Excel" => Maatwebsite\Excel\Facades\Excel::class,
+  ],
 
-
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
@@ -31,9 +29,9 @@ return [
     |
     */
 
-    'env' => env('APP_ENV', 'production'),
+  "env" => env("APP_ENV", "production"),
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
@@ -44,9 +42,9 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', false),
+  "debug" => (bool) env("APP_DEBUG", false),
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
@@ -57,9 +55,9 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+  "url" => env("APP_URL", "http://localhost"),
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
@@ -70,9 +68,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+  "timezone" => "UTC",
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
@@ -83,13 +81,13 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+  "locale" => env("APP_LOCALE", "en"),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+  "fallback_locale" => env("APP_FALLBACK_LOCALE", "en"),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+  "faker_locale" => env("APP_FAKER_LOCALE", "en_US"),
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
@@ -100,17 +98,13 @@ return [
     |
     */
 
-    'cipher' => 'AES-256-CBC',
+  "cipher" => "AES-256-CBC",
 
-    'key' => env('APP_KEY'),
+  "key" => env("APP_KEY"),
 
-    'previous_keys' => [
-        ...array_filter(
-            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
-        ),
-    ],
+  "previous_keys" => [...array_filter(explode(",", (string) env("APP_PREVIOUS_KEYS", "")))],
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
@@ -123,9 +117,8 @@ return [
     |
     */
 
-    'maintenance' => [
-        'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
-        'store' => env('APP_MAINTENANCE_STORE', 'database'),
-    ],
-
+  "maintenance" => [
+    "driver" => env("APP_MAINTENANCE_DRIVER", "file"),
+    "store" => env("APP_MAINTENANCE_STORE", "database"),
+  ],
 ];

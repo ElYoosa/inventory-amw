@@ -15,39 +15,45 @@ use Illuminate\View\View;
 
 class NewPasswordController extends Controller
 {
-    /**
-     * Tampilkan form reset password.
-     */
-    public function create(Request $request): View
-    {
-        return view('auth.reset-password', ['request' => $request]);
-    }
+  /**
+   * Tampilkan form reset password.
+   */
+  public function create(Request $request): View
+  {
+    return view("auth.reset-password", ["request" => $request]);
+  }
 
-    /**
-     * Tangani permintaan reset password baru.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'token' => ['required'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+  /**
+   * Tangani permintaan reset password baru.
+   */
+  public function store(Request $request): RedirectResponse
+  {
+    $request->validate([
+      "token" => ["required"],
+      "email" => ["required", "email"],
+      "password" => ["required", "confirmed", Rules\Password::defaults()],
+    ]);
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user) use ($request) {
-                $user->forceFill([
-                    'password' => Hash::make($request->password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+    $status = Password::reset(
+      $request->only("email", "password", "password_confirmation", "token"),
+      function (User $user) use ($request) {
+        $user
+          ->forceFill([
+            "password" => Hash::make($request->password),
+            "remember_token" => Str::random(60),
+          ])
+          ->save();
 
-                event(new PasswordReset($user));
-            }
-        );
+        event(new PasswordReset($user));
+      },
+    );
 
-        return $status == Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('success', 'Password berhasil diperbarui! Silakan login kembali.')
-            : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
-    }
+    return $status == Password::PASSWORD_RESET
+      ? redirect()
+        ->route("login")
+        ->with("success", "Password berhasil diperbarui! Silakan login kembali.")
+      : back()
+        ->withInput($request->only("email"))
+        ->withErrors(["email" => __($status)]);
+  }
 }

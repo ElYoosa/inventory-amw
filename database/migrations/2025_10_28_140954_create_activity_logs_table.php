@@ -5,21 +5,21 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void
-    {
-        Schema::create('activity_logs', function (Blueprint $table) {
-            $table->id();
-            $table->string('username');
-            $table->string('role');
-            $table->string('activity'); // Login / Logout
-            $table->string('ip_address')->nullable();
-            $table->string('user_agent')->nullable();
-            $table->timestamps();
-        });
-    }
+  public function up(): void
+  {
+    Schema::create("activity_logs", function (Blueprint $table) {
+      $table->id();
+      $table->string("username");
+      $table->string("role");
+      $table->string("activity"); // Login / Logout
+      $table->string("ip_address")->nullable();
+      $table->string("user_agent")->nullable();
+      $table->timestamps();
+    });
+  }
 
-    public function down(): void
-    {
-        Schema::dropIfExists('activity_logs');
-    }
+  public function down(): void
+  {
+    Schema::dropIfExists("activity_logs");
+  }
 };

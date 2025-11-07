@@ -7,14 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActivityLog extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = [
-        'username',
-        'role',
-        'activity',
-        'ip_address',
-        'device',
-        'browser',
-    ];
+  protected $fillable = ["username", "role", "activity", "ip_address", "device", "browser"];
 }

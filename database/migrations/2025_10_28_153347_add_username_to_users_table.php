@@ -5,22 +5,22 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void
-    {
-        Schema::table('users', function (Blueprint $table) {
-            // Cek apakah kolom sudah ada sebelum menambah
-            if (!Schema::hasColumn('users', 'username')) {
-                $table->string('username')->unique()->after('name');
-            }
-        });
-    }
+  public function up(): void
+  {
+    Schema::table("users", function (Blueprint $table) {
+      // Cek apakah kolom sudah ada sebelum menambah
+      if (!Schema::hasColumn("users", "username")) {
+        $table->string("username")->unique()->after("name");
+      }
+    });
+  }
 
-    public function down(): void
-    {
-        Schema::table('users', function (Blueprint $table) {
-            if (Schema::hasColumn('users', 'username')) {
-                $table->dropColumn('username');
-            }
-        });
-    }
+  public function down(): void
+  {
+    Schema::table("users", function (Blueprint $table) {
+      if (Schema::hasColumn("users", "username")) {
+        $table->dropColumn("username");
+      }
+    });
+  }
 };

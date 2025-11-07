@@ -18,116 +18,136 @@ use App\Exports\Traits\SanitizesSheetTitle;
 
 class RealtimeReportExport implements FromView, WithTitle, WithEvents, WithStyles, ShouldAutoSize
 {
-    use SanitizesSheetTitle;
+  use SanitizesSheetTitle;
 
-    protected $transactions;
-    protected $meta;
+  protected $transactions;
+  protected $meta;
 
-    public function __construct($transactions, $meta)
-    {
-        $this->transactions = $transactions;
-        $this->meta = $meta;
-    }
+  public function __construct($transactions, $meta)
+  {
+    $this->transactions = $transactions;
+    $this->meta = $meta;
+  }
 
-    public function view(): View
-    {
-        return view('reports.realtime-excel-plain', [
-            'transactions' => $this->transactions,
-            'meta'         => $this->meta,
-            'generated_at' => now()->format('d/m/Y H:i'),
+  public function view(): View
+  {
+    return view("reports.realtime-excel-plain", [
+      "transactions" => $this->transactions,
+      "meta" => $this->meta,
+      "generated_at" => now()->format("d/m/Y H:i"),
+    ]);
+  }
+
+  /** ✅ Sheet name pendek & aman */
+  public function title(): string
+  {
+    return $this->sanitizeSheetTitle("Realtime");
+  }
+
+  public function registerEvents(): array
+  {
+    return [
+      AfterSheet::class => function (AfterSheet $event) {
+        $sheet = $event->sheet->getDelegate();
+
+        // Tambah kop surat
+        $sheet->insertNewRowBefore(1, 4);
+
+        $drawing = new Drawing();
+        $drawing->setName("Logo");
+        $drawing->setDescription("Logo PT Annur Maknah Wisata");
+        $drawing->setPath(public_path("images/logo-amw.png"));
+        $drawing->setHeight(60);
+        $drawing->setCoordinates("A1");
+        $drawing->setOffsetX(10);
+        $drawing->setWorksheet($sheet);
+
+        $sheet->mergeCells("B1:I1");
+        $sheet->mergeCells("B2:I2");
+        $sheet->mergeCells("B3:I3");
+        $sheet->mergeCells("B4:I4");
+
+        $sheet->setCellValue("B1", "PT ANNUR MAKNAH WISATA");
+        $sheet->setCellValue(
+          "B2",
+          "Jl. KH Abdullah Syafei No.50 F12, Bukit Duri, Tebet, Jakarta Selatan 12840",
+        );
+        $sheet->setCellValue(
+          "B3",
+          "WhatsApp: (+62) 821-1515-3335  |  Email: umroh.anamta@gmail.com",
+        );
+        $sheet->setCellValue("B4", "Dicetak: " . now()->format("d F Y, H:i") . " WIB");
+
+        $sheet->getStyle("B1")->applyFromArray([
+          "font" => ["bold" => true, "size" => 14],
+          "alignment" => ["horizontal" => Alignment::HORIZONTAL_CENTER],
         ]);
-    }
 
-    /** ✅ Sheet name pendek & aman */
-    public function title(): string
-    {
-        return $this->sanitizeSheetTitle('Realtime');
-    }
+        $sheet->getStyle("B2:B4")->applyFromArray([
+          "font" => ["size" => 11],
+          "alignment" => ["horizontal" => Alignment::HORIZONTAL_CENTER],
+        ]);
 
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function (AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
+        // === Styling tabel setelah kop (deteksi baris header otomatis)
+        $highestRow = $sheet->getHighestRow();
 
-                // Tambah kop surat
-                $sheet->insertNewRowBefore(1, 4);
+        $startRow = 5; // default jika tidak ketemu
+        for ($row = 1; $row <= $highestRow; $row++) {
+          $cellValue = trim((string) $sheet->getCell("A" . $row)->getValue());
+          if (strcasecmp($cellValue, "No") === 0) {
+            $startRow = $row;
+            break;
+          }
+        }
+        $lastRow = max($startRow, $highestRow);
 
-                $drawing = new Drawing();
-                $drawing->setName('Logo');
-                $drawing->setDescription('Logo PT Annur Maknah Wisata');
-                $drawing->setPath(public_path('images/logo-amw.png'));
-                $drawing->setHeight(60);
-                $drawing->setCoordinates('A1');
-                $drawing->setOffsetX(10);
-                $drawing->setWorksheet($sheet);
+        // Header tebal + fill hijau lembut
+        $sheet
+          ->getStyle("A" . $startRow . ":I" . $startRow)
+          ->getFont()
+          ->setBold(true);
+        $sheet
+          ->getStyle("A" . $startRow . ":I" . $startRow)
+          ->getFill()
+          ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+          ->getStartColor()
+          ->setARGB("E8F5E9");
 
-                $sheet->mergeCells('B1:I1');
-                $sheet->mergeCells('B2:I2');
-                $sheet->mergeCells('B3:I3');
-                $sheet->mergeCells('B4:I4');
+        // Border seluruh tabel termasuk header
+        $sheet->getStyle("A" . $startRow . ":I" . $lastRow)->applyFromArray([
+          "borders" => [
+            "allBorders" => [
+              "borderStyle" => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+              "color" => ["argb" => "000000"],
+            ],
+          ],
+        ]);
 
-                $sheet->setCellValue('B1', 'PT ANNUR MAKNAH WISATA');
-                $sheet->setCellValue('B2', 'Jl. KH Abdullah Syafei No.50 F12, Bukit Duri, Tebet, Jakarta Selatan 12840');
-                $sheet->setCellValue('B3', 'WhatsApp: (+62) 821-1515-3335  |  Email: umroh.anamta@gmail.com');
-                $sheet->setCellValue('B4', 'Dicetak: ' . now()->format('d F Y, H:i') . ' WIB');
+        // Lebar otomatis kolom
+        foreach (range("A", "I") as $col) {
+          $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
 
-                $sheet->getStyle('B1')->applyFromArray([
-                    'font' => ['bold' => true, 'size' => 14],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
+        // Perataan kolom angka / kode
+        $sheet
+          ->getStyle("A" . $startRow . ":A" . $lastRow)
+          ->getAlignment()
+          ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet
+          ->getStyle("C" . $startRow . ":C" . $lastRow)
+          ->getAlignment()
+          ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet
+          ->getStyle("G" . $startRow . ":G" . $lastRow)
+          ->getAlignment()
+          ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+      },
+    ];
+  }
 
-                $sheet->getStyle('B2:B4')->applyFromArray([
-                    'font' => ['size' => 11],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
-
-                // === Styling tabel setelah kop (deteksi baris header otomatis)
-                $highestRow = $sheet->getHighestRow();
-
-                $startRow = 5; // default jika tidak ketemu
-                for ($row = 1; $row <= $highestRow; $row++) {
-                    $cellValue = trim((string) $sheet->getCell('A' . $row)->getValue());
-                    if (strcasecmp($cellValue, 'No') === 0) {
-                        $startRow = $row;
-                        break;
-                    }
-                }
-                $lastRow = max($startRow, $highestRow);
-
-                // Header tebal + fill hijau lembut
-                $sheet->getStyle('A' . $startRow . ':I' . $startRow)->getFont()->setBold(true);
-                $sheet->getStyle('A' . $startRow . ':I' . $startRow)->getFill()
-                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('E8F5E9');
-
-                // Border seluruh tabel termasuk header
-                $sheet->getStyle('A' . $startRow . ':I' . $lastRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                                'color' => ['argb' => '000000'],
-                            ],
-                        ],
-                    ]);
-
-                // Lebar otomatis kolom
-                foreach (range('A', 'I') as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(true);
-                }
-
-                // Perataan kolom angka / kode
-                $sheet->getStyle('A' . $startRow . ':A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('C' . $startRow . ':C' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('G' . $startRow . ':G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            },
-        ];
-    }
-
-    public function styles(Worksheet $sheet)
-    {
-        // Styling utama sudah diterapkan pada AfterSheet (setelah kop tersisip)
-        return [];
-    }
+  public function styles(Worksheet $sheet)
+  {
+    // Styling utama sudah diterapkan pada AfterSheet (setelah kop tersisip)
+    return [];
+  }
 }

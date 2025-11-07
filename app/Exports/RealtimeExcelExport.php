@@ -7,19 +7,17 @@ use App\Exports\RealtimeCollectionExport;
 
 class RealtimeExcelExport implements WithMultipleSheets
 {
-    protected $transactions;
-    protected $meta;
+  protected $transactions;
+  protected $meta;
 
-    public function __construct($transactions, $meta)
-    {
-        $this->transactions = $transactions;
-        $this->meta = $meta;
-    }
+  public function __construct($transactions, $meta)
+  {
+    $this->transactions = $transactions;
+    $this->meta = $meta;
+  }
 
-    public function sheets(): array
-    {
-        return [
-            new RealtimeCollectionExport($this->transactions, $this->meta),
-        ];
-    }
+  public function sheets(): array
+  {
+    return [new RealtimeCollectionExport($this->transactions, $this->meta)];
+  }
 }

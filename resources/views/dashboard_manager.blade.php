@@ -97,12 +97,23 @@
             </div>
             <ul class="list-group list-group-flush">
                 @forelse ($notifications as $n)
+                    @php
+                        $t = strtolower($n->title ?? '');
+                        $icon = 'bi-bell-fill';
+                        $color = 'text-theme';
+                        $badge = '';
+                        if (str_contains($t, 'habis')) { $icon = 'bi-exclamation-octagon-fill'; $color = 'text-danger'; $badge = 'Habis'; }
+                        elseif (str_contains($t, 'menipis')) { $icon = 'bi-exclamation-triangle-fill'; $color = 'text-warning'; $badge = 'Menipis'; }
+                    @endphp
                     <li class="list-group-item d-flex align-items-center justify-content-between">
                         <div>
-                            <i class="bi bi-bell me-2 text-theme"></i>
+                            <i class="bi {{ $icon }} me-2 {{ $color }}"></i>
+                            @if ($badge)
+                                <span class="badge {{ $badge === 'Habis' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning' }} me-2">{{ $badge }}</span>
+                            @endif
                             {{ $n->message }}
                         </div>
-                        <small class="text-muted">{{ $n->created_at->diffForHumans() }}</small>
+                        <small class="text-muted">{{ optional($n->notified_at)->diffForHumans() ?? $n->created_at->diffForHumans() }}</small>
                     </li>
                 @empty
                     <li class="list-group-item text-muted text-center">Tidak ada notifikasi saat ini.</li>

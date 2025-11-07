@@ -8,12 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRoleIsAdmin
 {
-    public function handle(Request $request, Closure $next): Response
-    {
-        if (! $request->user() || $request->user()->role !== 'admin') {
-            abort(403, 'Akses ditolak. Hanya admin yang dapat mengakses halaman ini.');
-        }
-
-        return $next($request);
+  public function handle(Request $request, Closure $next): Response
+  {
+    if (!$request->user() || $request->user()->role !== "admin") {
+      abort(403, "Akses ditolak. Hanya admin yang dapat mengakses halaman ini.");
     }
+
+    return $next($request);
+  }
 }

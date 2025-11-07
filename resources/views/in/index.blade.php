@@ -14,7 +14,8 @@
         <thead class="table-dark">
             <tr>
                 <th>No</th>
-                <th>Tanggal</th>
+                <th>Tanggal Transaksi</th>
+                <th>Dibuat Pada</th>
                 <th>Barang</th>
                 <th>Qty</th>
                 <th>Catatan</th>
@@ -24,7 +25,8 @@
             @foreach ($transactions as $trx)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $trx->date }}</td>
+                    <td>{{ \Carbon\Carbon::parse($trx->date)->format('d M Y') }}</td>
+                    <td>{{ optional($trx->created_at)->format('d M Y H:i') }}</td>
                     <td>{{ $trx->item->name }}</td>
                     <td>{{ $trx->qty }}</td>
                     <td>{{ $trx->note ?? '-' }}</td>

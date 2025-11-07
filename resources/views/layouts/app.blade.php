@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory ANAMTA</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- ✅ Bootstrap CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -276,17 +277,13 @@
 
                 @if ($role === 'manager')
                     @php
-                        $notifCount = \App\Models\Notification::where('role_target', 'manager')
-                            ->where('status', 'new')
-                            ->count();
+                        $notifCount = \App\Models\Notification::forManager()->where('status', 'new')->count();
                     @endphp
                     <li>
                         <a href="{{ route('notifications.index') }}"
-                            class="{{ request()->is('notifications*') ? 'active' : '' }}">
-                            <i data-lucide="bell"></i> Notifikasi
-                            @if ($notifCount > 0)
-                                <span class="badge bg-danger ms-auto">{{ $notifCount }}</span>
-                            @endif
+                            class="{{ request()->is('notifications*') ? 'active' : '' }} d-flex align-items-center gap-2">
+                            <i data-lucide="bell"></i> <span>Notifikasi</span>
+                            <span id="notifBadge" class="badge bg-danger ms-auto {{ $notifCount ? '' : 'd-none' }}">{{ $notifCount }}</span>
                         </a>
                     </li>
                 @endif
@@ -318,6 +315,29 @@
             document.querySelector('.toggle-btn')?.addEventListener('click', () => {
                 document.querySelector('.sidebar').classList.toggle('show');
             });
+
+            // ===== Realtime Notif Count (Manager) =====
+            const badge = document.getElementById('notifBadge');
+            async function refreshNotifCount() {
+                try {
+                    const res = await fetch('{{ route('notifications.count') }}', { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const count = Number(data.count || 0);
+                    if (badge) {
+                        badge.textContent = count;
+                        if (count > 0) {
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+                    }
+                } catch (e) { /* no-op */ }
+            }
+
+            // Jalankan saat load dan setiap 10 detik
+            refreshNotifCount();
+            setInterval(refreshNotifCount, 10000);
         });
     </script>
 

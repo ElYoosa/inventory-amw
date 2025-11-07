@@ -55,11 +55,7 @@
                 <i class="bi bi-box-seam me-2"></i> Top 5 Barang dengan Stok Menipis
             </div>
             <div class="card-body">
-                @php
-                    $lowStocks = \App\Models\Item::orderBy('stock')->take(5)->get();
-                @endphp
-
-                @forelse ($lowStocks as $item)
+                @forelse (($lowStocks ?? collect()) as $item)
                     <div class="mb-3">
                         <div class="d-flex justify-content-between">
                             <span class="fw-semibold text-dark">{{ $item->name }}</span>
@@ -67,7 +63,7 @@
                         </div>
                         <div class="progress" style="height: 8px;">
                             @php
-                                $percent = min(100, ($item->stock / max(1, $item->min_stock)) * 100);
+                                $percent = $item->min_stock > 0 ? min(100, ($item->stock / max(1, $item->min_stock)) * 100) : 100;
                                 $color = $percent < 50 ? '#dc3545' : ($percent < 80 ? '#ffc107' : '#16a34a');
                             @endphp
                             <div class="progress-bar" role="progressbar"
@@ -76,7 +72,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-center text-muted">Tidak ada data stok barang.</div>
+                    <div class="text-center text-muted">Tidak ada data stok barang yang Anda kelola.</div>
                 @endforelse
             </div>
         </div>
@@ -214,4 +210,97 @@
             transition: width 0.6s ease;
         }
     </style>
+
+    {{-- Transaksi Terbaru Anda --}}
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header text-white fw-semibold" style="background: var(--theme-color);">
+            <i class="bi bi-clock-history me-2"></i> Transaksi Terbaru Anda
+        </div>
+        <ul class="list-group list-group-flush">
+            @forelse (($recentTransactions ?? collect()) as $tx)
+                @php
+                    $isIn = ($tx['type'] ?? 'in') === 'in';
+                    $icon = $isIn ? 'bi-arrow-down-circle' : 'bi-arrow-up-circle';
+                    $iconColor = $isIn ? 'text-success' : 'text-danger';
+                    try { $d = \Carbon\Carbon::parse($tx['date']); } catch (\Throwable $e) { $d = now(); }
+                @endphp
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="me-3">
+                        <i class="bi {{ $icon }} me-2 {{ $iconColor }}"></i>
+                        <strong>{{ $isIn ? 'Masuk' : 'Keluar' }}</strong>:
+                        {{ $tx['item_name'] ?? '-' }}
+                        <small class="text-muted">x{{ $tx['qty'] ?? 0 }}</small>
+                        @if (!$isIn && !empty($tx['receiver']))
+                            <small class="text-muted">• Penerima: {{ $tx['receiver'] }}</small>
+                        @endif
+                        @if (!empty($tx['kode_grup']))
+                            <small class="text-muted">• Grup: {{ $tx['kode_grup'] }}</small>
+                        @endif
+                    </div>
+                    <small class="text-muted">{{ $d->format('d M Y') }}</small>
+                </li>
+            @empty
+                <li class="list-group-item text-muted text-center">Belum ada transaksi terbaru.</li>
+            @endforelse
+        </ul>
+    </div>
+
+    {{-- Riwayat Transaksi Anda (10 terakhir) --}}
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header text-white fw-semibold" style="background: var(--theme-color);">
+            <i class="bi bi-table me-2"></i> Riwayat Transaksi Anda
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">Tanggal</th>
+                        <th style="width: 90px;">Jenis</th>
+                        <th>Barang</th>
+                        <th style="width: 80px;" class="text-end">Qty</th>
+                        <th style="width: 160px;">Penerima</th>
+                        <th style="width: 120px;">Grup</th>
+                        <th>Catatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse (($historyTransactions ?? collect()) as $tx)
+                        @php
+                            $isIn = ($tx['type'] ?? 'in') === 'in';
+                            try { $d = \Carbon\Carbon::parse($tx['date']); } catch (\Throwable $e) { $d = now(); }
+                        @endphp
+                        <tr>
+                            <td><span class="text-nowrap">{{ $d->format('d M Y') }}</span></td>
+                            <td>
+                                <span class="badge {{ $isIn ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                                    {{ $isIn ? 'Masuk' : 'Keluar' }}
+                                </span>
+                            </td>
+                            <td>{{ $tx['item_name'] ?? '-' }}</td>
+                            <td class="text-end">{{ $tx['qty'] ?? 0 }}</td>
+                            <td>{{ $tx['receiver'] ?? '-' }}</td>
+                            <td>{{ $tx['kode_grup'] ?? '-' }}</td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 260px;">
+                                    {{ $tx['note'] ?? '-' }}
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Belum ada riwayat transaksi.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-end gap-2">
+            <a href="{{ route('in-transactions.index') }}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-arrow-down-circle"></i> Lihat Transaksi Masuk
+            </a>
+            <a href="{{ route('out-transactions.index') }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-arrow-up-circle"></i> Lihat Transaksi Keluar
+            </a>
+        </div>
+    </div>
 @endsection
