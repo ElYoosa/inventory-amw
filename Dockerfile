@@ -1,7 +1,7 @@
-# Gunakan PHP versi 8.2 agar cocok dengan composer.json
+# Gunakan PHP versi 8.2 (sesuai composer.json)
 FROM php:8.2-cli
 
-# Instal dependency sistem untuk GD, PDO, dan lain-lain
+# Instal dependency sistem untuk GD, PDO, Zip, dll.
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -21,14 +21,14 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /var/www/html
 
-# Salin semua file ke container
+# Salin file proyek
 COPY . .
 
-# Install dependencies Laravel
+# Install dependencies tanpa menjalankan artisan command di tahap build
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# Cache konfigurasi Laravel
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
-
-# Jalankan Laravel di port Railway
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+# Jalankan Laravel saat container aktif (runtime)
+CMD php artisan config:clear \
+ && php artisan view:clear \
+ && php artisan route:clear \
+ && php artisan serve --host=0.0.0.0 --port=$PORT
