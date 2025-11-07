@@ -1,4 +1,4 @@
-# Gunakan PHP versi 8.2 (sesuai composer.json)
+# Gunakan PHP versi 8.2
 FROM php:8.2-cli
 
 # Instal dependency sistem untuk GD, PDO, Zip, dll.
@@ -12,11 +12,15 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     unzip \
     git \
+    curl \
     && docker-php-ext-configure gd \
         --with-jpeg \
         --with-freetype \
         --with-webp \
     && docker-php-ext-install gd pdo pdo_mysql zip
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
@@ -31,4 +35,4 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 CMD php artisan config:clear \
  && php artisan view:clear \
  && php artisan route:clear \
- && php artisan serve --host=0.0.0.0 --port=$PORT
+ && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
